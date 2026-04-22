@@ -1,0 +1,20 @@
+.vscode
+.pio
+
+# Auto-generated headers (rebuilt on each build)
+src/stations.h
+src/line_colors_data.h
+src/vbz_font.h
+
+# Build artifacts
+*.o
+*.obj
+*.elf
+*.hex
+*.bin
+*.map
+*.d
+
+# OS files
+.DS_Store
+Thumbs.db
