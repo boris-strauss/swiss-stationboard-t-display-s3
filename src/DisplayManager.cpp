@@ -2,6 +2,7 @@
 #include "pin_config.h"
 #include "line_colors_data.h"
 #include "vbz_font.h"
+#include <Preferences.h>
 
 #define LCD_MODULE_CMD_1
 TFT_eSPI tft = TFT_eSPI();
@@ -20,7 +21,26 @@ void initDisplay() {
     pinMode(PIN_POWER_ON, OUTPUT); digitalWrite(PIN_POWER_ON, HIGH);
     pinMode(PIN_LCD_BL, OUTPUT); digitalWrite(PIN_LCD_BL, HIGH);
     tft.begin();
-    tft.setRotation(1);
+
+    // Load saved rotation from NVS (default: 1 = original orientation)
+    Preferences prefs;
+    prefs.begin("settings", true);
+    uint8_t savedRotation = prefs.getUChar("rotation", 1);
+    prefs.end();
+    if (savedRotation != 1 && savedRotation != 3) savedRotation = 1;
+    tft.setRotation(savedRotation);
+
+    tft.fillScreen(TFT_BLACK);
+}
+
+void toggleDisplayRotation() {
+    Preferences prefs;
+    prefs.begin("settings", false);
+    uint8_t currentRotation = prefs.getUChar("rotation", 1);
+    uint8_t newRotation = (currentRotation == 1) ? 3 : 1;
+    prefs.putUChar("rotation", newRotation);
+    prefs.end();
+    tft.setRotation(newRotation);
     tft.fillScreen(TFT_BLACK);
 }
 
