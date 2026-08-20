@@ -22,6 +22,7 @@ bool lastPageButtonState = HIGH;
 // BOOT button tracking
 unsigned long bootButtonPressStartTime = 0;
 bool isBootButtonPressed = false;
+bool bootLongPressTriggered = false;
 
 void updateDisplay() {
     if (currentDepartures.empty()) {
@@ -73,17 +74,30 @@ void loop() {
     // 1. Process Captive portal requests (if active)
     handleNetworkLoop();
 
-    // 2. Boot Button Logic (3-second press for Setup Portal)
+    // 2. Boot Button Logic
+    //    - Short press (< 3s): toggle display rotation 180°
+    //    - Long press (>= 3s): open setup portal
     bool currentBootState = digitalRead(BOOT_BUTTON_PIN);
     if (currentBootState == LOW) {
         if (!isBootButtonPressed) {
             isBootButtonPressed = true;
             bootButtonPressStartTime = millis();
-        } else if (millis() - bootButtonPressStartTime > 3000) {
-            // Button held for > 3 seconds
+            bootLongPressTriggered = false;
+        } else if (!bootLongPressTriggered && millis() - bootButtonPressStartTime > 3000) {
+            // Button held for > 3 seconds -> open setup portal
+            bootLongPressTriggered = true;
             triggerCaptivePortal();
         }
     } else {
+        // Button released
+        if (isBootButtonPressed && !bootLongPressTriggered) {
+            unsigned long pressDuration = millis() - bootButtonPressStartTime;
+            // Debounce: ignore presses shorter than 50ms
+            if (pressDuration > 50) {
+                toggleDisplayRotation();
+                updateDisplay();
+            }
+        }
         isBootButtonPressed = false;
     }
 

@@ -27,5 +27,6 @@ extern TFT_eSPI tft;
 void initDisplay();
 void showStatus(String message);
 void drawTimetable(const std::vector<Departure>& departures, const String& opMode);
+void toggleDisplayRotation();
 
 #endif // DISPLAY_MANAGER_H
