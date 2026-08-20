@@ -37,8 +37,26 @@ std::vector<Departure> fetchDepartures(const char* station, const String& opMode
     // ENCODE THE STATION NAME HERE
     String encodedStation = urlEncode(String(station));
 
-    // We fetch 20 to ensure we have enough data even if some are delayed
-    String url = "http://transport.opendata.ch/v1/stationboard?station=" + encodedStation + "&limit=20";
+    // We fetch 20 to ensure we have enough data even if some are delayed.
+    //
+    // fields[] makes the server strip everything we never render. By default the
+    // stationboard response carries a full passList (every subsequent stop of every
+    // departure), which is ~95% of the payload. Measured for one station, limit=20:
+    //   without fields[] : ~112'000 bytes
+    //   with    fields[] :   ~2'750 bytes
+    // At a 20 s refresh that is ~12 MB/day instead of ~485 MB/day.
+    // Brackets are percent-encoded so they survive any URL handling.
+    // Keep this list in sync with the ArduinoJson filter below.
+    static const char* API_FIELDS =
+        "&fields%5B%5D=stationboard/category"
+        "&fields%5B%5D=stationboard/number"
+        "&fields%5B%5D=stationboard/to"
+        "&fields%5B%5D=stationboard/operator"
+        "&fields%5B%5D=stationboard/stop/departureTimestamp"
+        "&fields%5B%5D=stationboard/stop/delay";
+
+    String url = "http://transport.opendata.ch/v1/stationboard?station=" + encodedStation
+               + "&limit=20" + API_FIELDS;
     
     Serial.print("\nFetching data from: ");
     Serial.println(url);
